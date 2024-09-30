@@ -29,9 +29,8 @@ urlpatterns = [
     # Django's built-in auth URLs
     path('accounts/', include('django.contrib.auth.urls')),
 
-    # Your inventory_manager URLs
-    path('', include('inventory_manager.urls')),  # Ensures all your custom paths are included
-
+    # Inventory_manager URLs
+    path('', include('inventory_manager.urls')),  # Ensures all my custom paths are included
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ]
