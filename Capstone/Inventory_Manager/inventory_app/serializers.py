@@ -4,6 +4,28 @@ from .models import Category, InventoryItem, InventoryChangeLog
 
 User = get_user_model()
 
+# Custom User Registration Serializer
+class UserRegistrationSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, required=True, style={'input_type': 'password'})
+
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'password']
+
+    def create(self, validated_data):
+        User = get_user_model()
+        user = User.objects.create_user(
+            username=validated_data['username'],
+            email=validated_data['email'],
+            first_name=validated_data['first_name'],
+            last_name=validated_data['last_name'],
+            password=validated_data['password']
+        )
+    
+        user.set_password(validated_data['password'])
+        user.save()
+        return user
+
 # Custom User Serializer
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -46,21 +68,20 @@ class InventoryItemSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Item Price cannot be less than 0.")
         return data
 
-# Inventory Change Log Serializer
 class InventoryChangeLogSerializer(serializers.ModelSerializer):
     inventory_item = InventoryItemSerializer(read_only=True)
     inventory_item_id = serializers.PrimaryKeyRelatedField(queryset=InventoryItem.objects.all(), write_only=True, source='inventory_item')
 
     class Meta:
         model = InventoryChangeLog
-        fields = ['id', 'inventory_item', 'inventory_item_id', 'change_amount', 'reason', 'date_changed', 'owner', 'changed_by', 'change_by_id']
+        fields = ['id', 'inventory_item', 'inventory_item_id', 'change_amount', 'reason', 'date_changed', 'changed_by']
         read_only_fields = ['id', 'date_changed', 'changed_by']
 
     def validate_change_amount(self, value):
-        if value['change_amount'] == 0:
+        if value == 0:
             raise serializers.ValidationError("Change Amount cannot be 0.")
         return value
-    
+
     def create(self, validated_data):
         validated_data['changed_by'] = self.context['request'].user
         return super().create(validated_data)

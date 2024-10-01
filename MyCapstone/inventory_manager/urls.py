@@ -1,26 +1,27 @@
 # inventory_manager/urls.py
+
 from django.urls import path
 from .views import (
-    UserCreateView, InventoryItemListCreateView, InventoryItemDetailView,
-    CategoryListCreateView, CategoryDetailView, InventoryChangeLogListView,
-    landing_page, dashboard_view, register, inventory_detail_view, api_root  # Include api_root
+    UserListCreateView, UserProfileView,
+    CategoryListCreateView, CategoryDetailView,
+    InventoryItemListCreateView, InventoryItemDetailView,
+    InventoryChangeLogListView, InventoryChangeLogDetailView
 )
 
 urlpatterns = [
-    # API Root Endpoint
-    path('api/', api_root, name='api-root'),  # The API index page
+    # User Management
+    path('users/', UserListCreateView.as_view(), name='user_list_create'),
+    path('user/', UserProfileView.as_view(), name='user_profile'),
 
-    # API Endpoints
-    path('api/register/', UserCreateView.as_view(), name='user-register'),
-    path('api/inventory/', InventoryItemListCreateView.as_view(), name='inventory-list-create'),
-    path('api/inventory/<int:pk>/', InventoryItemDetailView.as_view(), name='inventory-detail'),
-    path('api/categories/', CategoryListCreateView.as_view(), name='category-list-create'),
-    path('api/categories/<int:pk>/', CategoryDetailView.as_view(), name='category-detail'),
-    path('api/inventory-change-logs/', InventoryChangeLogListView.as_view(), name='inventory-change-log'),
+    # Category Management
+    path('categories/', CategoryListCreateView.as_view(), name='category_list_create'),
+    path('categories/<int:pk>/', CategoryDetailView.as_view(), name='category_detail'),
 
-    # Template Views
-    path('', landing_page, name='landing'),
-    path('dashboard/', dashboard_view, name='dashboard'),
-    path('register/', register, name='register'),
-    path('inventory/<int:pk>/', inventory_detail_view, name='inventory-detail-view'),  # New URL pattern for the inventory detail HTML view
+    # Inventory Item Management
+    path('inventory/', InventoryItemListCreateView.as_view(), name='inventory_list_create'),
+    path('inventory/<int:pk>/', InventoryItemDetailView.as_view(), name='inventory_detail'),
+
+    # Inventory Change Log Management
+    path('inventory-change-logs/', InventoryChangeLogListView.as_view(), name='inventory_change_logs'),
+    path('inventory-change-logs/<int:pk>/', InventoryChangeLogDetailView.as_view(), name='inventory_change_log_detail'),
 ]

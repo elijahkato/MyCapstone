@@ -60,6 +60,7 @@ class InventoryChangeLog(models.Model):
     date_changed = models.DateTimeField(auto_now_add=True, db_index=True, verbose_name="Date Changed")
     changed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='change_logs', verbose_name="Changed By")
 
+
     class Meta:
         verbose_name = "Inventory Change Log"
         verbose_name_plural = "Inventory Change Logs"

@@ -14,6 +14,7 @@ import os, random, string
 from pathlib import Path
 from dotenv import load_dotenv
 from str2bool import str2bool
+from datetime import timedelta
 
 load_dotenv()  # take environment variables from .env.
 
@@ -21,7 +22,6 @@ load_dotenv()  # take environment variables from .env.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('SECRET_KEY')
@@ -55,14 +55,12 @@ INSTALLED_APPS = [
     "rest_framework",            # Needed for REST API support
     "rest_framework.authtoken",  # Needed if using token authentication
     "django_filters",            # Needed for filtering support
-    "inventory_manager",
+    "inventory_manager", 
 ]
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.BasicAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
@@ -70,9 +68,10 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
     'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema',
-    'DEFAULT_RENDERER_CLASSES': (
-        'rest_framework.renderers.JSONRenderer',
-    ),
+    'DEFAULT_METADATA_CLASS': 'rest_framework.metadata.SimpleMetadata',
+    'DEFAULT_VERSIONING_CLASS': 'rest_framework.versioning.NamespaceVersioning',
+
+    # Filter and Search support
     'DEFAULT_FILTER_BACKENDS': (
         'django_filters.rest_framework.DjangoFilterBackend',
         'rest_framework.filters.SearchFilter',
@@ -82,8 +81,16 @@ REST_FRAMEWORK = {
         'rest_framework.renderers.JSONRenderer',  # Ensures JSON responses by default
          'rest_framework.renderers.BrowsableAPIRenderer',  # Ensures browsable API
     ),
+
 }
 
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),  # Access token lifetime
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),     # Refresh token lifetime
+    'ROTATE_REFRESH_TOKENS': True,                  # Automatically issue a new refresh token upon use
+    'BLACKLIST_AFTER_ROTATION': True,               # Blacklist the old refresh token when a new one is issued
+    'AUTH_HEADER_TYPES': ('Bearer',),               # The prefix for the Authorization header
+}
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -124,31 +131,37 @@ WSGI_APPLICATION = "core.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
-DB_ENGINE   = os.getenv('DB_ENGINE'   , None)
-DB_USERNAME = os.getenv('DB_USERNAME' , None)
-DB_PASS     = os.getenv('DB_PASS'     , None)
-DB_HOST     = os.getenv('DB_HOST'     , None)
-DB_PORT     = os.getenv('DB_PORT'     , None)
-DB_NAME     = os.getenv('DB_NAME'     , None)
+DB_ENGINE   = os.getenv('DB_ENGINE', 'mysql')  # Default to 'mysql' if not specified
+DB_USERNAME = os.getenv('kato')  # Default MySQL username
+DB_PASS     = os.getenv('Nathan@21356')          # Default MySQL password
+DB_HOST     = os.getenv('DB_HOST', '127.0.0.1') # Default MySQL host
+DB_PORT     = os.getenv('DB_PORT', '3306')      # Default MySQL port
+DB_NAME     = os.getenv('DB_NAME', 'InventoryManagerDB')  # Replace with your database name
 
 if DB_ENGINE and DB_NAME and DB_USERNAME:
-    DATABASES = { 
-      'default': {
-        'ENGINE'  : 'django.db.backends.' + DB_ENGINE, 
-        'NAME'    : DB_NAME,
-        'USER'    : DB_USERNAME,
-        'PASSWORD': DB_PASS,
-        'HOST'    : DB_HOST,
-        'PORT'    : DB_PORT,
-        }, 
-    }
-else:
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': 'db.sqlite3',
-        }
+            'ENGINE': 'django.db.backends.' + DB_ENGINE,
+            'NAME': DB_NAME,
+            'USER': DB_USERNAME,
+            'PASSWORD': DB_PASS,
+            'HOST': DB_HOST,
+            'PORT': DB_PORT,
+            'OPTIONS': {
+                'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+            },
+        },
     }
+else:
+    if DEBUG:
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+            }
+        }
+    else:
+        raise ValueError("Database configuration is missing. Ensure DB_ENGINE, DB_NAME, and DB_USERNAME are set in the environment.")
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
@@ -191,8 +204,8 @@ STATICFILES_DIRS = (
     os.path.join(BASE_DIR, 'static'),
 )
 
-#if not DEBUG:
-#    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+if not DEBUG:
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
@@ -200,7 +213,7 @@ STATICFILES_DIRS = (
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # settings.py
-LOGIN_URL = '/accounts/login/'  # Match URL Patterns in urls.py
-LOGIN_REDIRECT_URL = '/dashboard/'  # Ensure this is set to redirect to your dashboard after login
+# LOGIN_URL = '/accounts/login/'  # Match URL Patterns in urls.py
+# LOGIN_REDIRECT_URL = '/dashboard/'  # Ensure this is set to redirect to your dashboard after login
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
