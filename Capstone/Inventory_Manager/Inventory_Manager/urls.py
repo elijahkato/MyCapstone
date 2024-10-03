@@ -54,7 +54,7 @@ urlpatterns = [
 
     # Browsable API login/logout
     path('api-auth/', include('rest_framework.urls')),  # REST framework authentication
-    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
-    path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
+    path('swagger/', schema_view.with_ui('swagger', cache_timeout=600), name='schema-swagger-ui'),
+    path('redoc/', schema_view.with_ui('redoc', cache_timeout=600), name='schema-redoc'),
 
 ]

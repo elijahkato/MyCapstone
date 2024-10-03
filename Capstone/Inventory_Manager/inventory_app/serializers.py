@@ -13,7 +13,6 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         fields = ['id', 'username', 'email', 'first_name', 'last_name', 'password']
 
     def create(self, validated_data):
-        User = get_user_model()
         user = User.objects.create_user(
             username=validated_data['username'],
             email=validated_data['email'],
@@ -21,7 +20,6 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             last_name=validated_data['last_name'],
             password=validated_data['password']
         )
-    
         user.set_password(validated_data['password'])
         user.save()
         return user
@@ -56,7 +54,7 @@ class InventoryItemSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data['owner'] = self.context['request'].user  # Automatically set the owner
         return super().create(validated_data)
-    
+
     def validate(self, data):
         item_qty = data.get('item_qty', 0)
         item_price = data.get('item_price', 0.0)
@@ -68,14 +66,16 @@ class InventoryItemSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Item Price cannot be less than 0.")
         return data
 
+# Inventory Change Log Serializer
 class InventoryChangeLogSerializer(serializers.ModelSerializer):
     inventory_item = InventoryItemSerializer(read_only=True)
     inventory_item_id = serializers.PrimaryKeyRelatedField(queryset=InventoryItem.objects.all(), write_only=True, source='inventory_item')
-
+    # Display only the email of the user in the 'changed_by' field
+    changed_by = serializers.CharField(source='changed_by.email', read_only=True)
     class Meta:
         model = InventoryChangeLog
-        fields = ['id', 'inventory_item', 'inventory_item_id', 'change_amount', 'reason', 'date_changed', 'changed_by']
-        read_only_fields = ['id', 'date_changed', 'changed_by']
+        fields = ['id', 'inventory_item', 'inventory_item_id', 'change_amount', 'reason', 'date_changed', 'changed_by', 'change_details']
+        read_only_fields = ['id', 'date_changed', 'changed_by', 'change_details']
 
     def validate_change_amount(self, value):
         if value == 0:

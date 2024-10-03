@@ -55,7 +55,18 @@ class InventoryChangeLogAdmin(admin.ModelAdmin):
     search_fields = ('inventory_item__item_name', 'changed_by__email')
     list_filter = ('inventory_item', 'changed_by')
     ordering = ('-date_changed',)
-    readonly_fields = ('date_changed',)
-    
-    # Display related data in dropdowns
+    readonly_fields = ('date_changed', 'change_details')  # Make change_details readonly to avoid user input errors
+
     autocomplete_fields = ['inventory_item', 'changed_by']
+
+    # Display related data in dropdowns
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    
