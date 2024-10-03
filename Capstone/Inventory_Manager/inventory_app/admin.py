@@ -3,6 +3,14 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from .models import CustomUser, Category, InventoryItem, InventoryChangeLog
 from django.utils.html import format_html
+import locale
+
+# Set locale to Nigeria (Naira) currency
+try:
+    locale.setlocale(locale.LC_ALL, 'en_NG.UTF-8')
+except locale.Error:
+    # Handle locale setting error if locale is not available
+    print("Locale setting for Nigeria is not available on this system.")
 
 # Customizing the CustomUser admin interface
 @admin.register(CustomUser)
@@ -39,11 +47,20 @@ class CategoryAdmin(admin.ModelAdmin):
 # Registering the InventoryItem model
 @admin.register(InventoryItem)
 class InventoryItemAdmin(admin.ModelAdmin):
-    list_display = ('id', 'item_name', 'category', 'item_qty', 'item_price', 'owner', 'date_added', 'last_updated', 'item_image')
+    list_display = ('id', 'item_name', 'category', 'item_qty', 'formatted_price', 'owner', 'date_added', 'last_updated', 'low_stock_threshold' ,'item_image')
     list_filter = ('category', 'owner')
     search_fields = ('item_name', 'category__category', 'owner__email')
     ordering = ('-date_added',)
     readonly_fields = ('date_added', 'last_updated')
+    
+    def formatted_price(self, obj):
+        try:
+            # Use locale.currency to format the price with the Naira sign and commas
+            return locale.currency(obj.item_price, grouping=True)
+        except ValueError:
+            return f"₦{obj.item_price:,.2f}"  # Fallback formatting in case locale fails
+
+    formatted_price.short_description = 'Price (₦)'
 
     # Display related data in dropdowns
     autocomplete_fields = ['category', 'owner']

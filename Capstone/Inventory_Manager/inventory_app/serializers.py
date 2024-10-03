@@ -48,11 +48,14 @@ class InventoryItemSerializer(serializers.ModelSerializer):
 
     owner = UserSerializer(read_only=True)
     owner_id = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), write_only=True, source='owner')
-
+    formatted_price = serializers.SerializerMethodField()
     class Meta:
         model = InventoryItem
-        fields = ['id', 'item_name', 'item_description', 'item_qty', 'item_price', 'category', 'category_id', 'date_added', 'last_updated', 'owner', 'owner_id', 'item_image']
+        fields = ['id', 'item_name', 'item_description', 'item_qty', 'formatted_price', 'category', 'category_id', 'date_added', 'last_updated','low_stock_threshold', 'owner', 'owner_id', 'item_image']
         read_only_fields = ['id', 'date_added', 'last_updated', 'owner']
+    
+    def get_formatted_price(self, obj):
+        return "N{:,.2f}".format(obj.item_price)
 
     def create(self, validated_data):
         validated_data['owner'] = self.context['request'].user  # Automatically set the owner
@@ -90,4 +93,6 @@ class InventoryChangeLogSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data['changed_by'] = self.context['request'].user
         return super().create(validated_data)
+    
+
 

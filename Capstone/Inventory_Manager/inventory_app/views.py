@@ -1,4 +1,7 @@
+from django.db import models
 from rest_framework import generics
+from rest_framework.filters import OrderingFilter, SearchFilter
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from .models import Category, InventoryItem, InventoryChangeLog
 from django.contrib.auth import get_user_model
@@ -20,19 +23,20 @@ class ApiRootViewAuthenticated(APIView):
             'profile': reverse('user_profile', request=request),
             'categories': reverse('category_list_create', request=request),
             'inventory_items': reverse('inventory_list_create', request=request),
+            'inventory_levels': reverse('inventory_levels', request=request),
             'inventory_change_logs': reverse('inventory_change_logs', request=request),
+            'low_stock_items': reverse('low_stock_items', request=request),
             'token': reverse('token_obtain_pair', request=request),
             'token_refresh': reverse('token_refresh', request=request),
             'token_verify': reverse('token_verify', request=request),
-        })
-
-class ApiRootViewAllowAny(APIView):
-    permission_classes = [AllowAny]
-
-    def get(self, request, *args, **kwargs):
-        return Response({
             'register': reverse('user_registration', request=request),
         })
+    
+    # def get(self, request, *args, **kwargs):
+    #     return Response({
+    #         'register': reverse('user_registration', request=request),
+    #     })
+
 
 # User management views
 class UserRegistrationView(generics.CreateAPIView):
@@ -117,7 +121,27 @@ class InventoryItemDetailView(generics.RetrieveUpdateDestroyAPIView):
                 changed_by=self.request.user,
                 change_details=f"Changes: {changes}"
             )
+# Inventory level views
+class InventoryLevelListView(generics.ListAPIView):
+    queryset = InventoryItem.objects.all()
+    serializer_class = InventoryItemSerializer
+    permission_classes = [IsAuthenticated]  # Allow only authenticated users to access
 
+    # Filters: Category, Price Range, Low Stock
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ['category', 'item_price']  # Filtering by category and price range
+    search_fields = ['item_name']  # Search by item name
+    ordering_fields = ['item_qty', 'item_price']  # Allow ordering by quantity or price
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        # Filter for items with quantity below their custom low stock threshold
+        low_stock = self.request.query_params.get('low_stock', None)
+        if low_stock:
+            queryset = queryset.filter(item_qty__lt=models.F('low_stock_threshold'))
+
+        return queryset
 
 # Inventory change log views
 class InventoryChangeLogListView(generics.ListAPIView):
@@ -139,3 +163,11 @@ class InventoryChangeLogDetailView(generics.RetrieveAPIView):
         if self.request.user.is_staff:
             return InventoryChangeLog.objects.all()
         return InventoryChangeLog.objects.filter(changed_by=self.request.user)
+
+class LowStockItemsView(generics.ListAPIView):
+    serializer_class = InventoryItemSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        # Filter items where the quantity is less than the low stock threshold
+        return InventoryItem.objects.filter(item_qty__lt=models.F('low_stock_threshold'))
