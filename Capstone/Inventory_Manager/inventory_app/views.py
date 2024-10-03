@@ -96,27 +96,28 @@ class InventoryItemDetailView(generics.RetrieveUpdateDestroyAPIView):
         return InventoryItem.objects.filter(owner=self.request.user)
 
     def perform_update(self, serializer):
-        # Get old instance for comparison
+    # Get old instance for comparison
         old_instance = self.get_object()
         updated_instance = serializer.save()
 
         changes = {}
-        fields_to_check = ['item_name', 'item_description', 'item_qty', 'item_price', 'category']
-
-        for field in fields_to_check:
-            old_value = getattr(old_instance, field)
-            new_value = getattr(updated_instance, field)
-            if old_value != new_value:
-                changes[field] = {'old': old_value, 'new': new_value}
+        # Log quantity change if applicable
+        if old_instance.item_qty != updated_instance.item_qty:
+            changes['change_quantity'] = updated_instance.item_qty - old_instance.item_qty
+        # Log price change if applicable
+        if old_instance.item_price != updated_instance.item_price:
+            changes['change_price'] = updated_instance.item_price - old_instance.item_price
 
         if changes:
             InventoryChangeLog.objects.create(
                 inventory_item=updated_instance,
-                change_amount=updated_instance.item_qty - old_instance.item_qty,
-                reason=serializer.context['request'].data.get('reason', 'No reason provided'),
+                change_quantity=changes.get('change_quantity', None),
+                change_price=changes.get('change_price', None),
+                reason=self.request.data.get('reason', 'No reason provided'),
                 changed_by=self.request.user,
-                change_details=changes
+                change_details=f"Changes: {changes}"
             )
+
 
 # Inventory change log views
 class InventoryChangeLogListView(generics.ListAPIView):

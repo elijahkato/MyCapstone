@@ -2,6 +2,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from .models import CustomUser, Category, InventoryItem, InventoryChangeLog
+from django.utils.html import format_html
 
 # Customizing the CustomUser admin interface
 @admin.register(CustomUser)
@@ -38,7 +39,7 @@ class CategoryAdmin(admin.ModelAdmin):
 # Registering the InventoryItem model
 @admin.register(InventoryItem)
 class InventoryItemAdmin(admin.ModelAdmin):
-    list_display = ('id', 'item_name', 'category', 'item_qty', 'item_price', 'owner', 'date_added', 'last_updated')
+    list_display = ('id', 'item_name', 'category', 'item_qty', 'item_price', 'owner', 'date_added', 'last_updated', 'item_image')
     list_filter = ('category', 'owner')
     search_fields = ('item_name', 'category__category', 'owner__email')
     ordering = ('-date_added',)
@@ -46,18 +47,27 @@ class InventoryItemAdmin(admin.ModelAdmin):
 
     # Display related data in dropdowns
     autocomplete_fields = ['category', 'owner']
+    
+    # Display thumbnail in the admin list view
+    def item_image_thumbnail(self, obj):
+        if obj.item_image_thumbnail:
+            return format_html('<img src="{}" style="width: 45px; height:45px;" />', obj.item_image_thumbnail.url)
+        return ""
+    item_image_thumbnail.short_description = 'Thumbnail'
 
 
 # Registering the InventoryChangeLog model
 @admin.register(InventoryChangeLog)
 class InventoryChangeLogAdmin(admin.ModelAdmin):
-    list_display = ('id', 'inventory_item', 'change_amount', 'reason', 'date_changed', 'changed_by')
+    list_display = ('id', 'inventory_item', 'change_quantity', 'change_price', 'reason', 'date_changed', 'changed_by')
     search_fields = ('inventory_item__item_name', 'changed_by__email')
     list_filter = ('inventory_item', 'changed_by')
     ordering = ('-date_changed',)
-    readonly_fields = ('date_changed', 'change_details')  # Make change_details readonly to avoid user input errors
-
+    readonly_fields = ('date_changed',)
+    
+    # Display related data in dropdowns
     autocomplete_fields = ['inventory_item', 'changed_by']
+
 
     # Display related data in dropdowns
     def has_add_permission(self, request):

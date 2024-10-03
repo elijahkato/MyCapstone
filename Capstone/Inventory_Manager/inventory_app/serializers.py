@@ -23,6 +23,8 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         user.set_password(validated_data['password'])
         user.save()
         return user
+    
+    
 
 # Custom User Serializer
 class UserSerializer(serializers.ModelSerializer):
@@ -70,18 +72,21 @@ class InventoryItemSerializer(serializers.ModelSerializer):
 class InventoryChangeLogSerializer(serializers.ModelSerializer):
     inventory_item = InventoryItemSerializer(read_only=True)
     inventory_item_id = serializers.PrimaryKeyRelatedField(queryset=InventoryItem.objects.all(), write_only=True, source='inventory_item')
-    # Display only the email of the user in the 'changed_by' field
+
     changed_by = serializers.CharField(source='changed_by.email', read_only=True)
+
     class Meta:
         model = InventoryChangeLog
-        fields = ['id', 'inventory_item', 'inventory_item_id', 'change_amount', 'reason', 'date_changed', 'changed_by', 'change_details']
-        read_only_fields = ['id', 'date_changed', 'changed_by', 'change_details']
+        fields = ['id', 'inventory_item', 'inventory_item_id', 'change_quantity', 'change_price', 'reason', 'date_changed', 'changed_by']
+        read_only_fields = ['id', 'date_changed', 'changed_by']
 
-    def validate_change_amount(self, value):
-        if value == 0:
-            raise serializers.ValidationError("Change Amount cannot be 0.")
-        return value
+    def validate(self, data):
+        # Ensure at least one of quantity or price has been modified
+        if data.get('change_quantity') == 0 and not data.get('change_price'):
+            raise serializers.ValidationError("Either quantity or price must be updated.")
+        return data
 
     def create(self, validated_data):
         validated_data['changed_by'] = self.context['request'].user
         return super().create(validated_data)
+
