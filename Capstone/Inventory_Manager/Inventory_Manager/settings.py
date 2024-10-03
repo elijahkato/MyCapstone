@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',  # Add the REST framework JWT authentication to the list of installed apps
     'django_filters',  # Add the Django filters to the list of installed apps
     'imagekit',
+    'django_extensions', 
 
 ]
 
@@ -63,6 +64,10 @@ SWAGGER_SETTINGS = {
     },
 }
 
+GRAPH_MODELS = {
+  'all_applications': True,
+  'group_models': True,
+}
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
