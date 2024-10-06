@@ -145,10 +145,10 @@ WSGI_APPLICATION = 'Inventory_Manager.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.environ.get('MYSQL_DB_NAME', 'inventorymanagerdb'),
-        'USER': os.environ.get('MYSQL_DB_USER', 'kato'),
-        'PASSWORD': os.environ.get('MYSQL_DB_PASSWORD', 'Nathan@21356'),
-        'HOST': os.environ.get('MYSQL_DB_HOST', 'localhost'),  # Typically 'localhost' on PythonAnywhere
+        'NAME': os.environ.get('MYSQL_DB_NAME'),
+        'USER': os.environ.get('MYSQL_DB_USER'),
+        'PASSWORD': os.environ.get('MYSQL_DB_PASSWORD'),
+        'HOST': os.environ.get('MYSQL_DB_HOST'),  # Typically 'localhost' on PythonAnywhere
         'PORT': '3306',  # Default MySQL port
         'OPTIONS': {
             'sql_mode': 'STRICT_TRANS_TABLES',
