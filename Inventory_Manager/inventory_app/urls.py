@@ -9,7 +9,7 @@ from .views import (
     CategoryListCreateView, CategoryDetailView,
     InventoryItemListCreateView, InventoryItemDetailView, InventoryLevelListView,
     InventoryChangeLogListView, ApiRootViewAuthenticated, InventoryChangeLogDetailView, 
-    LowStockItemsView
+    LowStockItemsView, SoldItemView
 )
 
 urlpatterns = [
@@ -34,6 +34,8 @@ urlpatterns = [
     path('inventory/<int:pk>/', InventoryItemDetailView.as_view(), name='inventory_detail'),  # Retrieve, Update, or Delete an inventory item
     path('inventory-levels/', InventoryLevelListView.as_view(), name='inventory_levels'),
     path('inventory/low-stock/', LowStockItemsView.as_view(), name='low_stock_items'),
+    path('inventory/low-stock/<int:pk>/', LowStockItemsView.as_view(), name='low_stock_item_detail'),
+    path('inventory/sold-items/', SoldItemView.as_view(), name='sold_items'),
 
     # Inventory Change Log Management
     path('inventory-change-logs/', InventoryChangeLogListView.as_view(), name='inventory_change_logs'),  # List all inventory change logs

@@ -1,5 +1,5 @@
 from django.db import models
-from rest_framework import generics
+from rest_framework import generics, status
 from rest_framework.filters import OrderingFilter, SearchFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
@@ -36,6 +36,7 @@ class ApiRootViewAuthenticated(APIView):
     #     return Response({
     #         'register': reverse('user_registration', request=request),
     #     })
+
 
 
 # User management views
@@ -171,3 +172,38 @@ class LowStockItemsView(generics.ListAPIView):
     def get_queryset(self):
         # Filter items where the quantity is less than the low stock threshold
         return InventoryItem.objects.filter(item_qty__lt=models.F('low_stock_threshold'))
+    
+# sold items List Create View
+class SoldItemView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        try:
+            item = InventoryItem.objects.get(pk=pk)
+        except InventoryItem.DoesNotExist:
+            return Response({"detail": "Item not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Extract the quantity to sell from the request data
+        quantity_to_sell = request.data.get('quantity', 0)
+
+        if not isinstance(quantity_to_sell, int) or quantity_to_sell <= 0:
+            return Response({"detail": "Invalid quantity."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Check if the stock is available
+        if item.item_qty < quantity_to_sell:
+            return Response({"detail": "Not enough stock available."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Reduce the item quantity
+        item.item_qty -= quantity_to_sell
+        item.total_sold += quantity_to_sell  # Optional: Track total units sold
+        item.save()
+
+        # Log the sale
+        InventoryChangeLog.objects.create(
+            inventory_item=item,
+            change_quantity=-quantity_to_sell, # Negative quantity to indicate a sale
+            reason='Item Sold',
+            changed_by=request.user
+        )
+
+        return Response({"detail": f"{quantity_to_sell} units of {item.item_name} sold."}, status=status.HTTP_200_OK)

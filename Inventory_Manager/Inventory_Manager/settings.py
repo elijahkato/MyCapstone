@@ -93,7 +93,7 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_RENDERER_CLASSES': (
         'rest_framework.renderers.JSONRenderer',  # Ensures JSON responses by default
-         'rest_framework.renderers.BrowsableAPIRenderer',  # Ensures browsable API
+        'rest_framework.renderers.BrowsableAPIRenderer',  # Ensures browsable API
     ),
 
 }

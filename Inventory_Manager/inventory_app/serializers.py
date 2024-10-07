@@ -40,7 +40,7 @@ class CategorySerializer(serializers.ModelSerializer):
         model = Category
         fields = ['id', 'category', 'cat_description']
         read_only_fields = ['id']
-     
+     0
     # Validate the category name    
     def validate(self, data):
         category = data.get('category', None)
@@ -116,7 +116,12 @@ class InventoryChangeLogSerializer(serializers.ModelSerializer):
         validated_data['changed_by'] = self.context['request'].user
         return super().create(validated_data)
     
-    
-    
 
+class InventoryItemSerializer(serializers.ModelSerializer):
+    category = CategorySerializer(read_only=True)
+    owner = UserSerializer(read_only=True)
+    total_sold = serializers.IntegerField(read_only=True)  # Read-only field to expose total units sold
 
+    class Meta:
+        model = InventoryItem
+        fields = ['id', 'item_name', 'item_qty', 'item_price', 'category', 'total_sold']
