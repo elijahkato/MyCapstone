@@ -12,21 +12,24 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from datetime import timedelta
 from pathlib import Path
+import os
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
+MEDIA_URL = '/media/'  # URL to access media files
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-8+jqj6@jr22ckzlv+n4^#yw0s@c-eulg+p*ij5zd!76b4i_8!+'
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-8+jqj6@jr22ckzlv+n4^#yw0s@c-eulg+p*ij5zd!76b4i_8!+')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
 
 
 # Application definition
@@ -44,6 +47,8 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',  # Add the REST framework token authentication to the list of installed apps
     'rest_framework_simplejwt',  # Add the REST framework JWT authentication to the list of installed apps
     'django_filters',  # Add the Django filters to the list of installed apps
+    'imagekit',
+    'django_extensions', 
 
 ]
 
@@ -59,6 +64,10 @@ SWAGGER_SETTINGS = {
     },
 }
 
+GRAPH_MODELS = {
+  'all_applications': True,
+  'group_models': True,
+}
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -91,7 +100,7 @@ REST_FRAMEWORK = {
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),  # Access token lifetime
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),     # Refresh token lifetime
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=2),     # Refresh token lifetime
     'ROTATE_REFRESH_TOKENS': True,                  # Automatically issue a new refresh token upon use
     'BLACKLIST_AFTER_ROTATION': True,               # Blacklist the old refresh token when a new one is issued
     'AUTH_HEADER_TYPES': ('Bearer',),               # The prefix for the Authorization header
@@ -135,11 +144,17 @@ WSGI_APPLICATION = 'Inventory_Manager.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': os.environ.get('MYSQL_DB_NAME'),
+        'USER': os.environ.get('MYSQL_DB_USER'),
+        'PASSWORD': os.environ.get('MYSQL_DB_PASSWORD'),
+        'HOST': os.environ.get('MYSQL_DB_HOST'),  # Typically 'localhost' on PythonAnywhere
+        'PORT': '3306',  # Default MySQL port
+        'OPTIONS': {
+            'sql_mode': 'STRICT_TRANS_TABLES',
+        },
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -175,9 +190,15 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+SECURE_SSL_REDIRECT = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SESSION_COOKIE_SECURE = True
+
